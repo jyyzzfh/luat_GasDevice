@@ -1,0 +1,27 @@
+{
+  "Lua.diagnostics.disable": [
+    "deprecated",
+    "unused-local"
+  ],
+  "C_Cpp_Runner.warnings": [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic"
+  ],
+  "C_Cpp_Runner.compilerArgs": [],
+  "C_Cpp_Runner.includePaths": [],
+  "C_Cpp_Runner.linkerArgs": [],
+  "C_Cpp_Runner.cStandard": "",
+  "C_Cpp_Runner.cppStandard": "",
+  "C_Cpp_Runner.excludeSearch": [],
+  "C_Cpp_Runner.enableWarnings": true,
+  "C_Cpp_Runner.warningsAsError": false,
+  "files.associations": {
+    "adc.h": "c"
+  },
+  "Lua.diagnostics.globals": [
+    "test1",
+    "gpioIntFnc",
+    "getGpio18Fnc"
+  ]
+}
