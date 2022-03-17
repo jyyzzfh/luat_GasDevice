@@ -69,7 +69,7 @@ function EarthquakeWarning(mqttData)
                 setGpio9Fnc(0)
                 --sys.taskInit(mqttQuakAlarmSendTask, intensity)
                 sys.taskInit(solenoidValveOperationTask)
-                -- sys.taskInit(alarmLampOperationTask, countDownS)
+                sys.taskInit(alarmLampOperationTask, countDownS)
                 while countDownS >= 0 do
                     if countDownS <= 10 then
                         ttsStr = tostring(countDownS)
@@ -78,11 +78,11 @@ function EarthquakeWarning(mqttData)
                     if math.fmod(count, 12) == 0 then
                         uartTask.write(0x0C)
                     end
-                    if math.fmod(countDownS, 2) == 0 then
+                    --[[ if math.fmod(countDownS, 2) == 0 then
                         setGpio12Fnc(0)
                     else
                         setGpio12Fnc(1)
-                    end
+                    end ]]
                     sys.wait(1000)
                     countDownS = countDownS - 1
                     count = count + 1
@@ -95,7 +95,7 @@ end
 -- 报警音串口通讯
 --function voiceAlarmTask() uartTask.write(0x0C) end
 -- 报警灯操作任务
---[[ function alarmLampOperationTask(countDown)
+function alarmLampOperationTask(countDown)
     local count = 0
     local setGpio12Fnc = pins.setup(pio.P0_12, 0) -- 报警灯
     while countDown > 0 do
@@ -110,7 +110,7 @@ end
         countDown = countDown - 1
     end
     setGpio12Fnc(0)
-end ]]
+end
 -- 电磁阀操作任务
 function solenoidValveOperationTask()
     local count1 = 0
