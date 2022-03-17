@@ -14,7 +14,7 @@ TTS = 1
 -- 地震预警系统
 -- 两个功能：1.预警系统演练（tts语音播报3遍同时报警音触发）
 -- 入参：mqttData接收的预警信息
---local setGpio9Fnc = pins.setup(pio.P0_9, 1) -- 静音设置（高电平静音）
+-- local setGpio9Fnc = pins.setup(pio.P0_9, 1) -- 静音设置（高电平静音）
 --[[ function EarthquakeWarningSystem(mqttData)
     log.info("jsonData", mqttData)
     local tjsondata, result, errinfo = json.decode(mqttData)
@@ -34,6 +34,7 @@ end ]]
 function EarthquakeWarning(mqttData)
     log.info("jsonData", mqttData)
     local setGpio9Fnc = pins.setup(pio.P0_9, 1) -- 静音设置（高电平静音）
+    local setGpio12Fnc = pins.setup(pio.P0_12, 0) -- 报警灯
     local tjsondata, result, errinfo = json.decode(mqttData)
     if result and type(tjsondata) == "table" then
         local focal_longitude, focal_latitude, quakeTime, quake_intensity =
@@ -42,17 +43,17 @@ function EarthquakeWarning(mqttData)
         log.info("sysTime", sysTime)
         -- 计算距离
         local distance = Algorithm(getLbsLoc.Lng, getLbsLoc.Lat,
-                                   focal_longitude, focal_latitude) / 1000
+                                focal_longitude, focal_latitude) / 1000
         log.info("distance", distance)
         -- 计算S波到达时间 减1秒网络延时
         local countDownS = math.floor((distance / 3.5) -
-                                          ((sysTime - quakeTime) / 1000))
+                                        ((sysTime - quakeTime) / 1000))
         countDownS = countDownS < 0 and 0 or countDownS
         log.info("countDownS", countDownS)
         -- 烈度计算
         local intensity = math.floor(Round(
                                          quake_intensity - 4 *
-                                             math.log((distance / 10 + 1.0), 10)))
+                                            math.log((distance / 10 + 1.0), 10)))
         log.info("intensity", intensity)
         if intensity <= 0 then intensity = 1 end
         -- 地震烈度大于等于设定预警临界值则执行报警
@@ -66,10 +67,10 @@ function EarthquakeWarning(mqttData)
             end ]]
             if countDownS > 0 then
                 setGpio9Fnc(0)
-                sys.taskInit(mqttQuakAlarmSendTask, intensity)
+                --sys.taskInit(mqttQuakAlarmSendTask, intensity)
                 sys.taskInit(solenoidValveOperationTask)
-                sys.taskInit(AlarmLampOperationTask, countDownS)
-                while countDownS > 0 do
+                -- sys.taskInit(alarmLampOperationTask, countDownS)
+                while countDownS >= 0 do
                     if countDownS <= 10 then
                         ttsStr = tostring(countDownS)
                         audio.play(TTS, "TTS", ttsStr, 7)
@@ -77,7 +78,12 @@ function EarthquakeWarning(mqttData)
                     if math.fmod(count, 12) == 0 then
                         uartTask.write(0x0C)
                     end
-                    rtos.sleep(1000)
+                    if math.fmod(countDownS, 2) == 0 then
+                        setGpio12Fnc(0)
+                    else
+                        setGpio12Fnc(1)
+                    end
+                    sys.wait(1000)
                     countDownS = countDownS - 1
                     count = count + 1
                 end
@@ -86,8 +92,10 @@ function EarthquakeWarning(mqttData)
         end
     end
 end
+-- 报警音串口通讯
+--function voiceAlarmTask() uartTask.write(0x0C) end
 -- 报警灯操作任务
-function AlarmLampOperationTask(countDown)
+--[[ function alarmLampOperationTask(countDown)
     local count = 0
     local setGpio12Fnc = pins.setup(pio.P0_12, 0) -- 报警灯
     while countDown > 0 do
@@ -102,7 +110,7 @@ function AlarmLampOperationTask(countDown)
         countDown = countDown - 1
     end
     setGpio12Fnc(0)
-end
+end ]]
 -- 电磁阀操作任务
 function solenoidValveOperationTask()
     local count1 = 0
@@ -128,7 +136,7 @@ end
     sys.wait(12000)
     setGpio9Fnc(1) -- 报警结束设置静音
 end ]]
-function mqttQuakAlarmSendTask(intensity)
+--[[ function mqttQuakAlarmSendTask(intensity)
     local imei = misc.getImei()
     local topic = "gas/quake/" .. tostring(misc.getImei())
     local sendMsg =
@@ -139,7 +147,7 @@ function mqttQuakAlarmSendTask(intensity)
         mqttc:publish(topic, sendMsg, 0)
     end
     mqttc:disconnect()
-end
+end ]]
 function Algorithm(equipment_longitude, equipment_latitude, focal_longitude,
                    focal_latitude)
     local Lat1 = math.rad(equipment_latitude)
@@ -148,7 +156,7 @@ function Algorithm(equipment_longitude, equipment_latitude, focal_longitude,
     local a = Lat1 - Lat2
     local b = math.rad(equipment_longitude) - math.rad(focal_longitude)
     local s = 2 *
-                  math.asin(
+                math.asin(
                       math.sqrt(math.pow(math.sin(a / 2), 2) + math.cos(Lat1) *
                                     math.cos(Lat2) *
                                     math.pow(math.sin(b / 2), 2)))
