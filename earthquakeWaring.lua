@@ -77,7 +77,7 @@ function EarthquakeWarning(mqttData)
                     if math.fmod(count, 12) == 0 then
                         uartTask.write(0x0C)
                     end
-                    rtos.sleep(1000)
+                    sys.wait(1000)
                     countDownS = countDownS - 1
                     count = count + 1
                 end
