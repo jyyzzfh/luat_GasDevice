@@ -78,11 +78,6 @@ function EarthquakeWarning(mqttData)
                     if math.fmod(count, 12) == 0 then
                         uartTask.write(0x0C)
                     end
-                    --[[ if math.fmod(countDownS, 2) == 0 then
-                        setGpio12Fnc(0)
-                    else
-                        setGpio12Fnc(1)
-                    end ]]
                     sys.wait(1000)
                     countDownS = countDownS - 1
                     count = count + 1
