@@ -34,7 +34,6 @@ end ]]
 function EarthquakeWarning(mqttData)
     log.info("jsonData", mqttData)
     local setGpio9Fnc = pins.setup(pio.P0_9, 1) -- 静音设置（高电平静音）
-    local setGpio12Fnc = pins.setup(pio.P0_12, 0) -- 报警灯
     local tjsondata, result, errinfo = json.decode(mqttData)
     if result and type(tjsondata) == "table" then
         local focal_longitude, focal_latitude, quakeTime, quake_intensity =
